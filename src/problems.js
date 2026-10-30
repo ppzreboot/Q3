@@ -6,4 +6,4 @@ export const PROBLEMS = {
 
 export const PROBLEM_IDS = Object.keys(PROBLEMS);
 
-export const GITHUB = "https://github.com/swaninblack/Q3";
+export const GITHUB = "https://github.com/ppzreboot/Q3";

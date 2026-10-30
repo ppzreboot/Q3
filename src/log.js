@@ -3,43 +3,44 @@ function snapshot(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-const PERSON = ["甲", "乙", "丙"];
-const PILE = ["甲堆", "乙堆", "丙堆"];
-
-export function logSeal(problem, seal) {
+export function logSeal(problem, seal, t) {
   if (problem === "doors") {
     console.log(snapshot(seal.doors));
     const host = {};
     seal.hostOpensIfYouPick.forEach((open, pick) => {
-      host[`选${pick + 1}`] = open + 1;
+      host[t.log.hostOpens(pick + 1)] = open + 1;
     });
     console.log(snapshot(host));
     return;
   }
   if (problem === "prisoners") {
-    console.log(snapshot(seal.fates));
-    console.log(`将告知${PERSON[seal.wardenNamesIfYouPick[0]]}`);
+    console.log(seal.fates.map((fate) => t.log.fates[fate]));
+    console.log(t.log.willName(t.names[seal.wardenNamesIfYouPick[0]]));
     return;
   }
-  console.log(snapshot(seal.piles));
+  console.log(seal.piles.map((pile) => pile.map((card) => t.colors[card])));
   const flips = {};
   seal.piles.forEach((pile, index) => {
     const flip = seal.firstFlipIndex[index];
-    flips[PILE[index]] = { 两张牌: snapshot(pile), 先翻开下标: flip, 先翻开: pile[flip] };
+    flips[t.piles[index]] = t.log.pile(
+      pile.map((card) => t.colors[card]),
+      flip,
+      t.colors[pile[flip]],
+    );
   });
   console.log(snapshot(flips));
 }
 
-export function logPick(problem, pick, step) {
+export function logPick(problem, pick, step, t) {
   if (problem === "doors") {
-    console.log(`选了 ${pick + 1} 号门，打开 ${step.revealed + 1} 号门`);
+    console.log(t.log.pickedDoor(pick + 1, step.revealed + 1));
     return;
   }
   if (problem === "cards") {
-    console.log(`选了${PILE[pick]}，先翻${step.shown}`);
+    console.log(t.log.pickedPile(t.piles[pick], t.colors[step.shown]));
   }
 }
 
-export function logResult(problem, text) {
+export function logResult(text) {
   console.log(text);
 }

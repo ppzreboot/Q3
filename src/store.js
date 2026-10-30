@@ -5,7 +5,7 @@ const STORAGE_KEY = "q3.experiment.v2";
 function emptyStats(problem) {
   const stats = {};
   PROBLEMS[problem].decisions.forEach((decision) => {
-    stats[decision.id] = { wins: 0, plays: 0 };
+    stats[decision] = { wins: 0, plays: 0 };
   });
   return stats;
 }
@@ -28,9 +28,34 @@ function freshStore() {
 function recordIsValid(problem, rec) {
   if (!rec || !rec.stats || !Array.isArray(rec.history)) return false;
   return PROBLEMS[problem].decisions.every((decision) => {
-    const bucket = rec.stats[decision.id];
+    const bucket = rec.stats[decision];
     return bucket && typeof bucket.wins === "number" && typeof bucket.plays === "number";
   });
+}
+
+const NAME_INDEX = { 甲: 0, 乙: 1, 丙: 2 };
+
+// rounds saved before the history was structured only kept a Chinese sentence
+function upgrade(id, item) {
+  if (!item || typeof item.detail !== "string") return item;
+  if (id === "doors" && item.final == null) {
+    const m = item.detail.match(/^最终 (\d) 号门是(车|羊)$/);
+    if (m) return { ...item, final: Number(m[1]) - 1, prize: m[2] === "车" ? "car" : "goat" };
+  }
+  if (id === "prisoners" && item.named == null) {
+    let m = item.detail.match(/^(乙|丙)会被处决。(?:(乙|丙)被处决了。你被赦免。|你被处决了。(乙|丙)被赦免。)$/);
+    if (m) {
+      const youLive = Boolean(m[2]);
+      return { ...item, named: NAME_INDEX[m[1]], other: NAME_INDEX[m[2] || m[3]], youLive };
+    }
+    m = item.detail.match(/^(乙|丙)被处决。(甲|乙|丙)被处决。(甲|乙|丙)被赦免。$/);
+    if (m) {
+      const youLive = m[3] === "甲";
+      const other = youLive ? m[2] : m[3];
+      return { ...item, named: NAME_INDEX[m[1]], other: NAME_INDEX[other], youLive };
+    }
+  }
+  return item;
 }
 
 export function loadStore() {
@@ -42,7 +67,7 @@ export function loadStore() {
       if (recordIsValid(id, data.problems[id])) {
         store.problems[id] = {
           stats: data.problems[id].stats,
-          history: data.problems[id].history.slice(0, 30),
+          history: data.problems[id].history.slice(0, 30).map((item) => upgrade(id, item)),
         };
       }
     }
@@ -60,7 +85,7 @@ export function saveStore(store) {
   } catch (error) {
     if (!warned) {
       warned = true;
-      console.warn("记录没能写入这台浏览器。", error);
+      console.warn("Could not save the record in this browser.", error);
     }
   }
 }

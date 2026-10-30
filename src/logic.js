@@ -179,11 +179,11 @@ export function reveal(problem, sealed, pick) {
 export function judge(problem, sealed, pick, decision) {
   const step = reveal(problem, sealed, pick);
   if (problem === "cards") {
-    if (decision !== "same" && decision !== "different") fail("牌的选择无效");
+    if (decision !== "sameColor" && decision !== "otherColor") fail("牌的选择无效");
     return {
       ...step,
       decision,
-      win: decision === "same" ? step.isSame : !step.isSame,
+      win: decision === "sameColor" ? step.isSame : !step.isSame,
     };
   }
   if (decision !== "stay" && decision !== "switch") fail("选择无效");

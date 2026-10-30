@@ -7,8 +7,10 @@ import "./index.css";
 
 installFrames();
 
+const basename = import.meta.env.BASE_URL.replace(/\/$/, "");
+
 createRoot(document.getElementById("root")).render(
-  <BrowserRouter>
+  <BrowserRouter basename={basename}>
     <LangProvider>
       <App />
     </LangProvider>

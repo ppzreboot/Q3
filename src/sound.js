@@ -29,11 +29,24 @@ function load() {
   return engine;
 }
 
+let greeted = false;
+
+// a few notes when the game is opened; browsers only allow it after a click
+function greet() {
+  if (greeted || !on) return;
+  greeted = true;
+  load().then((Z) => {
+    const start = () => play("jingle");
+    if (Z.audioContext.state === "suspended") Z.audioContext.resume().then(start);
+    else start();
+  });
+}
+
 if (typeof window !== "undefined") {
   const unlock = () => {
     window.removeEventListener("pointerdown", unlock);
     window.removeEventListener("keydown", unlock);
-    if (on) load().then((Z) => Z.audioContext.resume());
+    greet();
   };
   window.addEventListener("pointerdown", unlock);
   window.addEventListener("keydown", unlock);
@@ -76,6 +89,20 @@ const saw = (midi, dur, extra = {}) =>
 const bell = (freq, len, vol = 0.16) => voice({ vol, freq, a: 0.003, s: 0.02, r: len });
 
 const SOUNDS = {
+  // a short major-key phrase, about two seconds
+  jingle: [
+    [0, sq(67, 0.12, 0.12)],
+    [0.13, sq(71, 0.12, 0.12)],
+    [0.26, sq(74, 0.12, 0.13)],
+    [0.39, sq(79, 0.16, 0.14)],
+    [0.58, sq(69, 0.12, 0.12)],
+    [0.71, sq(72, 0.12, 0.12)],
+    [0.84, sq(76, 0.12, 0.13)],
+    [0.97, sq(81, 0.18, 0.14)],
+    [1.2, sq(79, 0.42, 0.15)],
+    [1.2, sq(74, 0.42, 0.08)],
+    [1.2, tri(note(55), 0.5, 0.16)],
+  ],
   click: [[0, voice({ vol: 0.16, freq: 880, a: 0, s: 0.01, r: 0.03, shape: SQUARE, curve: 0.5 })]],
   pick: [
     [0, sq(76, 0.05)],
@@ -176,7 +203,10 @@ export function setSound(next) {
     // the choice just won't survive a reload
   }
   listeners.forEach((fn) => fn());
-  if (next) play("click");
+  if (next) {
+    if (greeted) play("click");
+    else greet();
+  }
 }
 
 export function subscribeSound(fn) {

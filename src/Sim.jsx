@@ -16,6 +16,8 @@ const STEP_PHASES = {
   cards: [["pick"], ["flip"], ["guess"], ["result"]],
 };
 
+const AUTO_NEXT_MS = 30000;
+
 function waitMs(ms) {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 180 : ms;
 }
@@ -224,15 +226,15 @@ export function Sim({ id }) {
       logPick("doors", index, reveal("doors", sealed, index), t);
       patch({ pick: index, phase: "announce", waiting: true });
       later(() => play("drumroll"), 200);
-      arm(my, 2800, () => {
+      arm(my, AUTO_NEXT_MS, () => {
         patch({ phase: "opening" });
-        arm(my, 2600, () => patch({ phase: "decide", waiting: false }));
+        arm(my, AUTO_NEXT_MS, () => patch({ phase: "decide", waiting: false }));
       });
       return;
     }
     logPick("cards", index, reveal("cards", sealed, index), t);
     patch({ pick: index, phase: "flip", waiting: true });
-    arm(my, 1600, () => patch({ phase: "guess", waiting: false }));
+    arm(my, AUTO_NEXT_MS, () => patch({ phase: "guess", waiting: false }));
   }
 
   function ask() {
@@ -241,12 +243,12 @@ export function Sim({ id }) {
     play("click");
     patch({ phase: "think", waiting: true });
     later(() => play("tick"), 150);
-    arm(my, 2600, () => {
+    arm(my, AUTO_NEXT_MS, () => {
       const step = reveal("prisoners", sealed, 0);
       logResult(t.prisoners.answer(t.names[step.revealed]));
       play("ominous");
       patch({ phase: "answer" });
-      arm(my, 2800, () => {
+      arm(my, AUTO_NEXT_MS, () => {
         play("gloat");
         patch({ phase: "gloat", waiting: false });
       });
